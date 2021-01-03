@@ -1,0 +1,326 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Checker with Django</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <!-- JQuery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Bootstrap tooltips -->
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/umd/popper.min.js"></script>
+    <!-- Bootstrap core JavaScript -->
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <!-- MDB core JavaScript -->
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/js/mdb.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/css/nice-select.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.47.0/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.47.0/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.47.0/mode/python/python.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.4/theme/dracula.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+</head>
+<body>
+
+{% block content %}
+
+    <div class="container">
+        <div id="theme-switcher" class="theme-switch-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </div>
+        <div class="mx-auto">
+            <h2 class="text-center mt-5 mb-3 title-head">Django Query Playground
+            </h2>
+        </div>
+
+        <div class="col-md-10 mx-auto">
+            <textarea id="code"></textarea>
+            <small class="text-danger" id="err"></small>
+
+            <div class="row mt-4 mb-5">
+                <button class="btn btn-info" id="validate">Validate</button>
+                <button class="btn btn-success" id="migrate" style="display: none">Create Dummy</button>
+
+            </div>
+
+            <div class="row mb-2 mt-2">
+                <div class="col-md-6 table-parent">
+                    <small id="info" class="text-muted" style="display: none">
+                        Hint: Double click on a value to change it
+                    </small>
+                    <table id="data" class="table table-bordered table-sm responsive" style="display: none">
+
+                        <thead>
+                        <tr id="table-head">
+
+                        </tr>
+                        </thead>
+                        <tbody id="body-data">
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-3 mb-3 shadow-lg">
+                        <h4 class="text-center mb-3">Query</h4>
+                        <textarea id="query" cols="1" rows="1"></textarea>
+                        <small class="text-danger" id="query-err"></small>
+                        <div class="col-md-6 mt-2">
+                            <button class="btn btn-sm btn-secondary" id="run">Query</button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col table-parent">
+                            <table id="newData" class="table table-bordered table-sm responsive">
+                                Query Result
+                                <thead>
+                                <tr id="newTable-head">
+
+                                </tr>
+                                </thead>
+                                <tbody id="newBody-data">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+{% endblock %}
+
+
+
+{% block javascript %}
+    <script type="text/javascript">
+        // Wait for document to load
+        document.addEventListener("DOMContentLoaded", function (event) {
+            let currentTheme = localStorage.getItem("data-theme")
+            const Theme = {
+                "dark": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n" +
+                    "         stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n" +
+                    "        <path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"></path>\n" +
+                    "    </svg>",
+                "light": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" " +
+                    "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">" +
+                    "<circle cx=\"12\" cy=\"12\" r=\"5\"></circle>" +
+                    "<line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line>" +
+                    "<line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line>" +
+                    "<line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line>" +
+                    "<line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line>" +
+                    "<line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line>" +
+                    "<line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line>" +
+                    "<line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"></line>" +
+                    "<line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"></line>" +
+                    "</svg>"
+            }
+            document.documentElement.setAttribute("data-theme", currentTheme ? currentTheme : "light");
+
+            let themeSwitcher = document.getElementById("theme-switcher");
+            themeSwitcher.innerHTML = Theme[currentTheme] ? Theme[currentTheme] : Theme["dark"]
+
+            // When our button gets clicked
+            themeSwitcher.onclick = function () {
+                // Get the current selected theme, on the first run
+                // it should be `light`
+                let currentTheme = document.documentElement.getAttribute("data-theme");
+
+                // Switch between `dark` and `light`
+                let switchToTheme = currentTheme === "dark" ? "light" : "dark"
+
+                // Set our currenet theme to the new one
+                document.documentElement.setAttribute("data-theme", switchToTheme);
+                themeSwitcher.innerHTML = Theme[currentTheme]
+                localStorage.setItem("data-theme", switchToTheme)
+            }
+        });
+    </script>
+
+    <script>
+        let column = []
+        let dataLs = []
+        $(document).ready(function () {
+
+            let className
+
+            $('#validate').click(function () {
+
+                let code = window.myCodeMirror.getValue();
+                let value = $(this).html()
+                $(this).html('<i class="fa fa-circle-o-notch fa-spin fa-2x"></i>')
+
+                column = []
+                dataLs = []
+
+                $.ajax({
+                    url: "{% url 'validate' %}",
+                    data: {
+                        'code': code
+                    },
+                    success: function (data) {
+                        $("#err").html(data["err"])
+                        $('#validate').html(value)
+                        if (data["is_valid"]) {
+                            $('#migrate').css('display', '')
+                            $.each(data['data'], (name, value) => {
+                                dataLs.push(value)
+
+                            })
+                            $.each(data['column'], (name, value) => {
+                                column.push(value)
+
+                            })
+                            className = data['className'];
+                        }
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        $('#validate').html(value)
+                    }
+
+                });
+
+            });
+
+            $('#migrate').click(function () {
+
+                $('#table-head').html("")
+                $("#body-data").html("")
+
+                if (column.length && dataLs.length) {
+                    $.each(column, (name, value) => {
+                        $('#table-head').append(`<th scope=col>${value}</th>`)
+                    })
+
+                    $.each(dataLs, (index, value) => {
+                        let el = '<tr>';
+                        $.each(value, (idx, val) => {
+                            el += `<td class="editable" row=${index} column=${idx}>${val}</td>`
+
+                        })
+                        $('#body-data').append(el.concat('</tr>'))
+                    })
+                    $("#info").css('display', '')
+                    $('#data').css('display', '')
+                    $('#query-block').css('display', '')
+
+
+                }
+
+            })
+
+            window.myQuery = CodeMirror.fromTextArea(document.getElementById("query"), {
+
+                mode: 'python',
+                theme: 'dracula',
+            });
+            window.myQuery.setSize(null, 30)
+
+
+            window.myCodeMirror = CodeMirror.fromTextArea(document.getElementById("code"), {
+                lineNumbers: true,
+                mode: 'python',
+                theme: 'dracula',
+                tabsize: 4,
+                smartIndent: true
+            });
+
+
+            $('#run').click(function () {
+
+                let query = window.myQuery.getValue();
+                $('#newTable-head').html('')
+                $('#newBody-data').html('')
+
+
+                $.ajax({
+                    url: "{% url 'query' %}",
+                    data: {
+                        'className': className,
+                        'query': query,
+                        'data': JSON.stringify(dataLs),
+                        'columns': JSON.stringify(column),
+                    },
+                    success: function (data) {
+                        $("#query-err").html(data['err'])
+
+                        if (data['success']) {
+                            if (data['column'].length && data['data'].length) {
+                                $.each(data['column'], (name, value) => {
+                                    $('#newTable-head').append(`<th scope=col>${value}</th>`)
+                                })
+                                $.each(data['data'], (index, value) => {
+                                    let el = `<tr>`;
+                                    $.each(value, (idx, val) => {
+                                        el += `<td>${val}</td>`
+
+                                    })
+                                    $('#newBody-data').append(el.concat('</tr>'))
+                                })
+                                $('#newData').css('display', '')
+
+                                $(this).attr('disabled', 'disabled')
+
+                            }
+                        }
+                    }
+
+                });
+            });
+
+
+        })
+
+        $(document).on("dblclick", ".editable", function () {
+            let label = $(this);
+            let input = $('<input>', {
+                type: 'text',
+                value: label.text()
+            })
+            label.html(input)
+            input.select()
+            let row = label.attr('row');
+            let col = label.attr('column')
+            label.focusout(function () {
+                dataLs[row][col] = label.children("input").val()
+                label.html(dataLs[row][col])
+            })
+
+            label.keypress(function (e) {
+                if (e.keyCode === 13) {
+                    dataLs[row][col] = label.children("input").val()
+                    label.html(dataLs[row][col])
+                }
+
+            })
+        })
+
+    </script>
+
+{% endblock %}
+</body>
+</html>

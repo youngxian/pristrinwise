@@ -1,0 +1,74 @@
+
+
+
+:root {
+    --bg-color: #fff;
+    --text-color: #000;
+    --nav-bar-scrolled: #fff;
+}
+
+[data-theme="dark"] {
+    --bg-color: #343942;
+    --text-color: #fff;
+    --nav-bar-scrolled: #32363d;
+}
+
+button {
+    border-radius: 4px !important;
+}
+
+textarea {
+    width: 100%;
+}
+
+
+.footer {
+    bottom: 0;
+    right: 0;
+    position: fixed;
+    margin-bottom: 0;
+}
+
+
+body {
+    width: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+
+#query {
+    width: 100%;
+}
+
+.card {
+    border-radius: 8px;
+    border-top: 3px solid #a6c;
+    background-color: var(--bg-color);
+}
+
+.table-parent {
+    max-height: 400px;
+    overflow: auto;
+}
+
+
+.foot {
+    left: 0;
+    bottom: 0;
+    text-align: center;
+
+}
+
+.theme-switch-button {
+    position: fixed;
+    top: 20px !important;
+    right: 50px !important;
+    z-index: 99;
+    border: 2px solid var(--bg-color);
+    outline: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+}
